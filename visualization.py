@@ -38,6 +38,7 @@ class Visualization:
 
         self.ins_inited = False
 
+    # --- Bubble Sort Algorithm --- 
     def bubbleSort(self):
         if self.done:
             return
@@ -80,6 +81,7 @@ class Visualization:
             self.sorted_tail = self.n - self.i
             self.isSwapped = False
 
+    # --- Insertion Sort Algorithm --- 
     def insertionSort(self):
         if self.done:
             return
@@ -117,6 +119,14 @@ class Visualization:
         self.j -= 1
         self.next_step_time = now + self.delay_swap
 
+    # --- Quick Sort Algorithm --- 
+    def quickSort(self):
+        pass
+
+    # --- Merge Sort Algorithm ---
+    def mergeSort(self):
+        pass
+    # --- Reset the data --- 
     def reset(self, data):
         if data is None:
             self.dataLength = numpy.random.randint(10, self.screen_height - 50, dataPoints)
@@ -211,7 +221,8 @@ while running:
             else:
                 hover_side = None
 
-    
+
+    # --- hover effect ---
     if start_visualize and hover_side == 'left':
         overlay = pygame.Surface((left_rect.width, left_rect.height), pygame.SRCALPHA)
         overlay.fill(WHITE_TRANS)  # white translucent
