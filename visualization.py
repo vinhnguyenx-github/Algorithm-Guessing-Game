@@ -126,6 +126,7 @@ class Visualization:
     # --- Merge Sort Algorithm ---
     def mergeSort(self):
         pass
+    
     # --- Reset the data --- 
     def reset(self, data):
         if data is None:
