@@ -5,3 +5,6 @@ def format_time(ms):
 
 start_time = None       
 elapsed_ms = 0           
+attempt_idx = 1
+timer_running = False
+reaction_logged = False

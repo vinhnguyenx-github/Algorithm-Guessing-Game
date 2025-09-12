@@ -15,3 +15,10 @@ WHITE_TRANS = (255, 255, 255, 40)
 FPS = 60
 
 dataPoints = 20
+
+SPEED_FACTOR = 0.35
+
+prediction = None        # 'left' or 'right'
+result_printed = False
+
+result_text = "" 
