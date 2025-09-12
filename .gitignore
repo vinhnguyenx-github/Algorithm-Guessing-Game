@@ -1,2 +1,8 @@
 __pycache__/
 *.pyc
+
+# Ignore everything in data/ folder
+data/*
+
+# But keep the folder itself
+!data/.gitkeep

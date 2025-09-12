@@ -18,9 +18,10 @@ dataPoints = 20
 
 SPEED_FACTOR = 0.35
 
-prediction = None        # 'left' or 'right'
+attempt_line_id = 1        # increments each round in this session
+pending_time_s = None      # store click time until result is known
+prediction = None
+result_text = ""
 result_printed = False
-
-result_text = "" 
 
 algorithms = [1, 2]

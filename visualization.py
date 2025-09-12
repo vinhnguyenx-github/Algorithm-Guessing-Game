@@ -1,25 +1,33 @@
 import os
 import pygame
 import numpy
-from config import *
-from button import Button
-from timer import *
 import re 
 import glob
 import random
+import csv
+from config import *
+from timer import *
+from button import Button
+
 
 os.makedirs("data", exist_ok=True)
 
 def next_attempt_index():
     nums = []
-    for p in glob.glob("data/attempt*.txt"):
-        m = re.search(r"attempt(\d+)\.txt$", p)
+    for p in glob.glob("data/attempt*.csv"):
+        m = re.search(r"attempt(\d+)\.csv$", p)
         if m:
             nums.append(int(m.group(1)))
     return (max(nums) + 1) if nums else 1
 
-ATTEMPT_IDX = next_attempt_index()                  # e.g., 1, 2, 3, ...
-SESSION_FILE = f"data/attempt{ATTEMPT_IDX}.txt"     
+ATTEMPT_IDX = next_attempt_index()
+SESSION_FILE = f"data/attempt{ATTEMPT_IDX}.csv"
+
+# Create headers if this is a new file 
+if not os.path.exists(SESSION_FILE):
+    with open(SESSION_FILE, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["id", "time", "result"])  # columns     
 
 class Visualization:
     def __init__(self, dataLength, screen=win, screen_width=WIDTH, screen_height=HEIGHT,
@@ -149,7 +157,6 @@ class Visualization:
         self.j -= 1
         self.next_step_time = now + self.delay_swap
 
-
     # --- Quick Sort Algorithm --- 
     def quickSort(self):
         pass
@@ -244,9 +251,13 @@ while running:
             timer_running = True
             reaction_logged = False
             prediction = None
+            result_text = ""
             result_printed = False
+            pending_time_s = None
+            # randomize algorithms per round (assumes `algorithms` list exists)
+            left_algo, right_algo = random.sample(algorithms, 2)
 
-        # Reset round
+        # Reset round (new shared data)
         if reset_button.is_clicked(event):
             base_data = numpy.random.randint(10, HEIGHT - 100, dataPoints)
             left_vis.reset(base_data)
@@ -257,27 +268,24 @@ while running:
             timer_running = False
             reaction_logged = False
             prediction = None
-            result_printed = False
-            left_algo, right_algo = random.sample(algorithms, 2)
-            hover_side = None
             result_text = ""
+            result_printed = False
+            pending_time_s = None
+            hover_side = None
 
-        # Player click to choose
+        # First click inside a column → choose, speed up, capture time, freeze timer
         if start_visualize and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if left_rect.collidepoint(event.pos) or right_rect.collidepoint(event.pos):
                 if prediction is None:
                     prediction = 'left' if left_rect.collidepoint(event.pos) else 'right'
-                    print(f"Picked: {prediction}")
-
-                left_vis.speedUp()
-                right_vis.speedUp()
-
+                # speed up both
+                if hasattr(left_vis, "speedUp"): left_vis.speedUp()
+                else: left_vis.delay_compare = left_vis.delay_swap = 10
+                if hasattr(right_vis, "speedUp"): right_vis.speedUp()
+                else: right_vis.delay_compare = right_vis.delay_swap = 10
+                # capture reaction time once; freeze timer
                 if timer_running and not reaction_logged and start_time is not None:
-                    os.makedirs("data", exist_ok=True)
-                    click_s = (pygame.time.get_ticks() - start_time) / 1000.0
-                    with open(SESSION_FILE, "a", encoding="utf-8") as f:
-                        f.write(f"{click_s:.3f}\n")
-                    attempt_idx += 1
+                    pending_time_s = (pygame.time.get_ticks() - start_time) / 1000.0
                     reaction_logged = True
                     timer_running = False
 
@@ -291,10 +299,10 @@ while running:
         if timer_running:
             elapsed_ms = pygame.time.get_ticks() - start_time
 
-        left_vis.render_step(left_algo)    # Bubble
-        right_vis.render_step(right_algo)   # Insertion
+        left_vis.render_step(left_algo)
+        right_vis.render_step(right_algo)
 
-        # decide winner
+        # decide winner and set on-screen result + append CSV row once
         if prediction is not None and not result_printed:
             lf = getattr(left_vis, "finished_at", None)
             rf = getattr(right_vis, "finished_at", None)
@@ -305,15 +313,22 @@ while running:
                 winner = 'left'
             elif rf is not None:
                 winner = 'right'
+
             if winner is not None:
                 if winner == 'tie':
                     result_text = "Result: Tie"
                 else:
                     result_text = "Correct!" if prediction == winner else f"Incorrect — {winner} finished first"
+                # append CSV row: id,time,result  (pending_time_s is reaction time at click)
+                if pending_time_s is not None:
+                    with open(SESSION_FILE, "a", newline="", encoding="utf-8") as f:
+                        writer = csv.writer(f)
+                        writer.writerow([attempt_line_id, f"{pending_time_s:.3f}", "Correct" if result_text.startswith("Correct") else ("Tie" if winner == "tie" else "Incorrect")])
+                    attempt_line_id += 1
+                    pending_time_s = None
                 result_printed = True
-
     else:
-        # before Start: do NOT draw bars → columns remain black
+        # keep columns black until Start
         pass
 
     # ---------------- HOVER (only when running) ----------------
@@ -347,7 +362,6 @@ while running:
     if result_text:
         result_render = font.render(result_text, True, WHITE)
         win.blit(result_render, (WIDTH // 2 - result_render.get_width() // 2, HEIGHT - 40))
-
 
     pygame.display.update()
     clock.tick(FPS)
