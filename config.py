@@ -22,3 +22,5 @@ prediction = None        # 'left' or 'right'
 result_printed = False
 
 result_text = "" 
+
+algorithms = [1, 2]

@@ -6,6 +6,7 @@ from button import Button
 from timer import *
 import re 
 import glob
+import random
 
 os.makedirs("data", exist_ok=True)
 
@@ -189,6 +190,12 @@ class Visualization:
             case 2:
                 self.insertionSort()
                 self.name = "Insertion sort"
+            case 3:
+                self.quickSort()
+                self.name = "Quick sort"
+            case 4:
+                self.mergeSort()
+                self.name = "Merge sort"
         self.draw_bars()
 
     def render_title(self, font):
@@ -217,6 +224,8 @@ right_rect = pygame.Rect(left_width, 0, right_width, HEIGHT - 80)
 
 start_button = Button( 30, HEIGHT - 55, 120, 40, "Start", font)
 reset_button = Button(180, HEIGHT - 55, 120, 40, "Reset", font)
+
+left_algo, right_algo = random.sample(algorithms, 2)
 
 start_visualize =False
 hover_side = None
@@ -249,6 +258,7 @@ while running:
             reaction_logged = False
             prediction = None
             result_printed = False
+            left_algo, right_algo = random.sample(algorithms, 2)
             hover_side = None
             result_text = ""
 
@@ -281,8 +291,8 @@ while running:
         if timer_running:
             elapsed_ms = pygame.time.get_ticks() - start_time
 
-        left_vis.render_step(1)    # Bubble
-        right_vis.render_step(2)   # Insertion
+        left_vis.render_step(left_algo)    # Bubble
+        right_vis.render_step(right_algo)   # Insertion
 
         # decide winner
         if prediction is not None and not result_printed:
