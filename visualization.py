@@ -278,10 +278,9 @@ while running:
                 if prediction is None:
                     prediction = 'left' if left_rect.collidepoint(event.pos) else 'right'
                 # speed up both
-                if hasattr(left_vis, "speedUp"): left_vis.speedUp()
-                else: left_vis.delay_compare = left_vis.delay_swap = 10
-                if hasattr(right_vis, "speedUp"): right_vis.speedUp()
-                else: right_vis.delay_compare = right_vis.delay_swap = 10
+                left_vis.speedUp()
+                right_vis.speedUp()
+                
                 # capture reaction time once; freeze timer
                 if timer_running and not reaction_logged and start_time is not None:
                     pending_time_s = (pygame.time.get_ticks() - start_time) / 1000.0
