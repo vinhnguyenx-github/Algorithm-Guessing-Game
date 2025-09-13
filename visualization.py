@@ -66,7 +66,7 @@ class Visualization:
         self.ins_inited = False      # insertion one-time init
         self.finished_at = None      # pygame ticks when finished
 
-    # --- Bubble Sort (adjacent, early-exit) ---
+    # --- Bubble Sort  ---
     def bubbleSort(self):
         if self.done:
             return
@@ -113,9 +113,8 @@ class Visualization:
             self.j = 0
             self.i += 1
             self.sorted_tail = self.n - self.i
-            # self.isSwapped reset happens next pass (or here if you prefer)
 
-    # --- Insertion Sort (pair-only highlight; all-green only at end) ---
+    # --- Insertion Sort  ---
     def insertionSort(self):
         if self.done:
             return

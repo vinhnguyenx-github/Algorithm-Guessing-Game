@@ -60,7 +60,7 @@ Algorithm-Guessing-Game/
 * Modify `config.py` to adjust colors, sizes, or sorting speeds.
 * Add or remove algorithms by editing the visualization logic.
 
-## ➕ Adding New Algorithms
+## Adding New Algorithms
 
 1. Implement the sorting function as a generator or yield-based routine.
 2. Add it to the visualization script alongside existing algorithms.
@@ -91,10 +91,9 @@ Algorithm-Guessing-Game/
 * [ ] Results screen & in-game stats summary
 * [ ] Configurable UI for quick parameter changes
 
-## Contributing
+## Refereneces
 
-Pull requests and issues are welcome.
-Please include a short explanation for any code changes.
-
+* W3Schools. (n.d.). Data Structures and Algorithms (DSA). Retrieved September 13, 2025, from https://www.w3schools.com/dsa/
+* Pygame documentation: https://www.pygame.org/docs/
 
 
