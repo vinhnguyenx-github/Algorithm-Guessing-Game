@@ -64,6 +64,7 @@ class Visualization:
         # algo-specific flags
         self.isSwapped = False       # bubble early-exit flag (reset each pass)
         self.ins_inited = False      # insertion one-time init
+        self.merge_inited = False    # merge one-time init
         self.finished_at = None      # pygame ticks when finished
 
     # --- Bubble Sort  ---
@@ -162,8 +163,71 @@ class Visualization:
 
     # --- Merge Sort Algorithm ---
     def mergeSort(self):
-        pass
-    
+        if self.done:
+            return
+        now = pygame.time.get_ticks()
+        if now < self.next_step_time:
+            return
+
+        # one-time setup (first frame)
+        if not self.merge_inited:
+            if not hasattr(self, "merge_tasks"):
+                self.merge_tasks = []
+            if not hasattr(self, "merge_buffer"):
+                self.merge_buffer = None
+
+            # generate all merge jobs for progressively larger block sizes (bottom-up)
+            size = 1
+            while size < self.n:
+                for left in range(0, self.n, 2*size):
+                    mid = min(left + size - 1, self.n - 1)
+                    right = min(left + 2*size - 1, self.n - 1)
+                    if mid < right:
+                        self.merge_tasks.append((left, mid, right))
+                size *= 2
+            self.merge_inited = True
+
+        # if no jobs, mark as complete
+        if not self.merge_tasks:
+            self.states[:] = 2
+            self.done = True
+            if self.finished_at is None:
+                self.finished_at = now
+            return
+
+        # init buffer for current merge job if not already active
+        if self.merge_buffer is None:
+            l, m, r = self.merge_tasks[0]
+            self.merge_buffer = (l, m, r, l, m+1, [])
+
+        # unpack state for ongoing merge
+        l, m, r, i, j, merged = self.merge_buffer
+
+        # elements being compared for visualization
+        self.states[:] = 0
+        if i <= m and (j > r or self.dataLength[i] <= self.dataLength[j]):
+            merged.append(self.dataLength[i])
+            self.states[i] = 1
+            i += 1
+        elif j <= r:
+            merged.append(self.dataLength[j])
+            self.states[j] = 1
+            j += 1
+
+        # if both halves finished, add merged block back to array
+        if i > m and j > r:
+            for k, val in enumerate(merged):
+                self.dataLength[l + k] = val
+            self.merge_tasks.pop(0)
+            self.merge_buffer = None
+        else:
+            # otherwise continue next frame
+            self.merge_buffer = (l, m, r, i, j, merged)
+
+        # frames delay
+        self.next_step_time = now + self.delay_swap
+
+
     # --- Reset the data --- 
     def reset(self, data):
         self.dataLength = numpy.array(data, dtype=int).copy()
@@ -178,6 +242,9 @@ class Visualization:
         self.finished_at = None
         self.delay_swap = 200
         self.delay_compare = 200
+        self.merge_inited = False
+        self.merge_tasks = []
+        self.merge_buffer = None
 
     def draw_bars(self):
         for i in range(len(self.dataLength)):
