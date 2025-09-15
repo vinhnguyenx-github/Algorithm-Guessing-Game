@@ -66,6 +66,8 @@ class Visualization:
         self.ins_inited = False      # insertion one-time init
         self.merge_inited = False    # merge one-time init
         self.finished_at = None      # pygame ticks when finished
+        self.sel_inited = False      # selection one-time init
+        self.sel_min_idx = 0         # min flag 
 
     # --- Bubble Sort  ---
     def bubbleSort(self):
@@ -226,6 +228,63 @@ class Visualization:
 
         # frames delay
         self.next_step_time = now + self.delay_swap
+        
+    # --- selection sort ---   
+    def selectionSort(self):
+        if self.done:
+            return
+        now = pygame.time.get_ticks()
+        if now < self.next_step_time:
+            return
+
+        # one-time init
+        if not self.sel_inited:
+            self.i = 0
+            self.j = 1
+            self.sel_min_idx = 0
+            self.sel_inited = True
+            
+        if self.i >= self.n - 1:
+            self.states[:] = 2
+            self.done = True
+            if self.finished_at is None:
+                self.finished_at = now
+            return
+
+        self.states[:] = 0
+        if self.i > 0:
+            self.states[:self.i] = 2
+
+        # end of scan → swap min into position i
+        if self.j >= self.n:
+            if self.sel_min_idx != self.i:
+                self.dataLength[self.i], self.dataLength[self.sel_min_idx] = \
+                    self.dataLength[self.sel_min_idx], self.dataLength[self.i]
+                # highlight swap pair
+                self.states[self.i] = self.states[self.sel_min_idx] = 1
+                self.i += 1
+                self.j = self.i + 1
+                self.sel_min_idx = self.i
+                self.next_step_time = now + self.delay_swap
+                return
+            else:
+                # no swap needed
+                self.i += 1
+                self.j = self.i + 1
+                self.sel_min_idx = self.i
+                self.next_step_time = now + self.delay_compare
+                return
+
+        # compare a[j] with current min
+        # highlight current j and current min
+        self.states[self.sel_min_idx] = 1
+        self.states[self.j] = 1
+
+        if self.dataLength[self.j] < self.dataLength[self.sel_min_idx]:
+            self.sel_min_idx = self.j  # new min found
+
+        self.j += 1
+        self.next_step_time = now + self.delay_compare
 
 
     # --- Reset the data --- 
@@ -245,6 +304,8 @@ class Visualization:
         self.merge_inited = False
         self.merge_tasks = []
         self.merge_buffer = None
+        self.sel_inited = False
+        self.sel_min_idx = 0
 
     def draw_bars(self):
         for i in range(len(self.dataLength)):
@@ -269,6 +330,9 @@ class Visualization:
             case 4:
                 self.mergeSort()
                 self.name = "Merge sort"
+            case 5:
+                self.selectionSort()
+                self.name = "Selection sort"
         self.draw_bars()
 
     def render_title(self, font):
