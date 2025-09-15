@@ -24,4 +24,4 @@ prediction = None
 result_text = ""
 result_printed = False
 
-algorithms = [1, 2]
+algorithms = [1, 2, 4]
