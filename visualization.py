@@ -160,62 +160,92 @@ class Visualization:
         self.next_step_time = now + self.delay_swap
 
     # --- Quick Sort Algorithm --- 
+       # --- Quick Sort Algorithm --- 
     def quickSort(self):
         if self.done:
             return
+
         now = pygame.time.get_ticks()
         if now < self.next_step_time:
             return
 
-        # one-time setup
-        if not hasattr(self, "quick_tasks"):
-            # stack-based simulation: each task = (low, high, pivot_index, i, j)
-            self.quick_tasks = [(0, self.n - 1, None, None, None)]
+        # one-time setup: use a simple stack of (low, high) tasks
+        if not hasattr(self, "quick_tasks") or self.quick_tasks is None:
+            self.quick_tasks = [(0, self.n - 1)]
             self.quick_in_progress = None
 
-        # if no tasks left, sorting is done
-        if not self.quick_tasks:
+        # if no tasks and nothing in progress -> finished
+        if not self.quick_tasks and self.quick_in_progress is None:
             self.states[:] = 2
             self.done = True
             if self.finished_at is None:
                 self.finished_at = now
             return
 
-        # if current task not initialized, pop a new task
+        # start a new partition task if none in progress
         if self.quick_in_progress is None:
-            self.quick_in_progress = self.quick_tasks.pop()
-            low, high, _, _, _ = self.quick_in_progress
-            self.quick_in_progress = [low, high, high, low - 1, low]  # pivot=high, i=low-1, j=low
-
-        low, high, pivot_idx, i, j = self.quick_in_progress
-
-        self.states[:] = 0
-        if low <= high:
-            self.states[pivot_idx] = 1  # pivot
-            if j < high:
-                self.states[j] = 1
-                if self.dataLength[j] <= self.dataLength[pivot_idx]:
-                    i += 1
-                    self.dataLength[i], self.dataLength[j] = self.dataLength[j], self.dataLength[i]
-                    self.next_step_time = now + self.delay_swap
-                else:
-                    self.next_step_time = now + self.delay_compare
-                j += 1
-                self.quick_in_progress = [low, high, pivot_idx, i, j]
+            # pop next range
+            low, high = self.quick_tasks.pop()
+            # if trivial range, mark it sorted and continue next frame
+            if low >= high:
+                # single element or empty
+                if 0 <= low < self.n:
+                    self.states[low] = 2
                 return
-            else:
-                # place pivot in correct position
-                self.dataLength[i + 1], self.dataLength[pivot_idx] = self.dataLength[pivot_idx], self.dataLength[i + 1]
-                pivot_final = i + 1
-                # add new tasks for left and right subarrays
-                if pivot_final - 1 > low:
-                    self.quick_tasks.append((low, pivot_final - 1, None, None, None))
-                if pivot_final + 1 < high:
-                    self.quick_tasks.append((pivot_final + 1, high, None, None, None))
-                self.quick_in_progress = None
+            pivot = high
+            i = low - 1
+            j = low
+            self.quick_in_progress = [low, high, pivot, i, j]
+
+        # unpack current partition state
+        low, high, pivot, i, j = self.quick_in_progress
+
+        # visualization highlights
+        self.states[:] = 0
+        if 0 <= pivot < self.n:
+            self.states[pivot] = 1
+        if low <= j < self.n:
+            self.states[j] = 1
+
+        # walk j from low..high-1 comparing to pivot
+        if j <= high - 1:
+            if self.dataLength[j] <= self.dataLength[pivot]:
+                i += 1
+                # swap into place
+                self.dataLength[i], self.dataLength[j] = self.dataLength[j], self.dataLength[i]
                 self.next_step_time = now + self.delay_swap
+            else:
+                self.next_step_time = now + self.delay_compare
+            j += 1
+            self.quick_in_progress = [low, high, pivot, i, j]
+            return
         else:
+            # put pivot into final place at i+1
+            pivot_final = i + 1
+            self.dataLength[pivot_final], self.dataLength[pivot] = \
+                self.dataLength[pivot], self.dataLength[pivot_final]
+
+            # mark pivot_final as sorted
+            if 0 <= pivot_final < self.n:
+                self.states[pivot_final] = 2
+
+            # push subranges (right and left). push larger first or either order is fine.
+            # We'll push right then left so left is processed next (LIFO stack).
+            if pivot_final + 1 < high:
+                self.quick_tasks.append((pivot_final + 1, high))
+            if low < pivot_final - 1:
+                self.quick_tasks.append((low, pivot_final - 1))
+
+            # done with this partition
             self.quick_in_progress = None
+            self.next_step_time = now + self.delay_swap
+
+            # if no more tasks, mark complete in next frame
+            if not self.quick_tasks:
+                self.states[:] = 2
+                self.done = True
+                if self.finished_at is None:
+                    self.finished_at = now
 
 
     # --- Merge Sort Algorithm ---
