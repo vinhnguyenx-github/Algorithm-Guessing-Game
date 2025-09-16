@@ -68,6 +68,9 @@ class Visualization:
         self.finished_at = None      # pygame ticks when finished
         self.sel_inited = False      # selection one-time init
         self.sel_min_idx = 0         # min flag 
+        self.quick_tasks = None
+        self.quick_in_progress = None
+
 
     # --- Bubble Sort  ---
     def bubbleSort(self):
@@ -391,6 +394,9 @@ class Visualization:
         self.merge_buffer = None
         self.sel_inited = False
         self.sel_min_idx = 0
+        self.quick_tasks = None
+        self.quick_in_progress = None
+
 
     def draw_bars(self):
         for i in range(len(self.dataLength)):
