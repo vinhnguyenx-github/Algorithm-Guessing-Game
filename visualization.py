@@ -85,7 +85,6 @@ class Visualization:
         for k in range(self.sorted_tail, self.n):
             self.states[k] = 2
 
-        # finished?
         if self.i >= self.n - 1:
             self.states[:] = 2
             self.done = True
@@ -93,7 +92,6 @@ class Visualization:
                 self.finished_at = now
             return
 
-        # start-of-pass hygiene (optional)
         if self.j == 0:
             self.isSwapped = False
 
@@ -142,7 +140,6 @@ class Visualization:
 
         self.states[:] = 0  # only highlight current pair
 
-        # key placed? advance to next i
         if self.j < 0 or self.dataLength[self.j] <= self.dataLength[self.j + 1]:
             self.i += 1
             if self.i >= self.n:
@@ -163,7 +160,6 @@ class Visualization:
         self.next_step_time = now + self.delay_swap
 
     # --- Quick Sort Algorithm --- 
-       # --- Quick Sort Algorithm --- 
     def quickSort(self):
         if self.done:
             return
@@ -249,7 +245,6 @@ class Visualization:
                 self.done = True
                 if self.finished_at is None:
                     self.finished_at = now
-
 
     # --- Merge Sort Algorithm ---
     def mergeSort(self):
@@ -374,7 +369,6 @@ class Visualization:
         self.j += 1
         self.next_step_time = now + self.delay_compare
 
-
     # --- Reset the data --- 
     def reset(self, data):
         self.dataLength = numpy.array(data, dtype=int).copy()
@@ -426,6 +420,7 @@ class Visualization:
                 self.name = "Selection sort"
         self.draw_bars()
 
+    # --- will remove this in the future ---
     def render_title(self, font):
         # draw the title above this column
         label = font.render(f"{self.name}", True, WHITE)
@@ -475,10 +470,9 @@ while running:
             result_text = ""
             result_printed = False
             pending_time_s = None
-            # randomize algorithms per round (assumes `algorithms` list exists)
             left_algo, right_algo = random.sample(algorithms, 2)
 
-        # Reset round (new shared data)
+        # Reset round 
         if reset_button.is_clicked(event):
             base_data = numpy.random.randint(10, HEIGHT - 100, dataPoints)
             left_vis.reset(base_data)
