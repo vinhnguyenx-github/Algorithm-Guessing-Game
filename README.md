@@ -48,6 +48,12 @@ Jupyter notebooks under `notebooks/` provide analysis tools:
 python visualization.py
 ```
 
+5. Run the test:
+
+```bash
+pytest -q
+```
+
 ## Project Structure
 
 ```
@@ -58,6 +64,8 @@ Algorithm-Guessing-Game/
 ├─ config.py             # Configuration (colors, speeds, layout)
 ├─ notebooks/            # Jupyter notebooks for data analysis
 ├─ data/                 # Session logs (ignored in Git)
+├─ tests/                # Unit tests for algorithms & API
+│  ├─ test_visualization.py
 ├─ requirements.txt      # Python dependencies
 └─ README.md             # Project documentation
 ```
