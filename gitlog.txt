@@ -1,0 +1,21 @@
+b8ec6cc | vinhnguyenx | 2025-09-16 | fix some comments
+db1c2cf | vinhnguyenx | 2025-09-17 | Add aprita quick sort
+47e352d | Arpita | 2025-09-17 | First commit - added sorting visualization game
+a925e32 | Arpita | 2025-09-17 | Fresh upload of quicksort code
+ee34d7f | vinhnguyenx | 2025-09-15 | add selection sort
+6a40f53 | vinhnguyenx | 2025-09-15 | Merge branch 'main' of https://github.com/vinhnguyenx-github/Algorithm-Guessing-Game
+a086fad | vinhnguyenx | 2025-09-15 | jazz merge sort
+576e021 | arpita2200 | 2025-09-13 | Create quick_sort.py
+85c9ac7 | vinhnguyenx | 2025-09-13 | update speed up function
+a4578c8 | vinhnguyenx | 2025-09-13 | add comment
+aa57ac7 | vinhnguyenx | 2025-09-13 | update readme
+410c9e8 | vinhnguyenx | 2025-09-13 | update analysis tool
+1f593c9 | vinhnguyenx | 2025-09-13 | update readme
+d9c3738 | vinhnguyenx | 2025-09-13 | update requirements
+2295181 | vinhnguyenx | 2025-09-13 | update config, modify structure of log file, add git ignore to ignore data folder
+0c33ee1 | vinhnguyenx | 2025-09-12 | update algorithm to choose random sorting algorithm
+1a9bcfd | vinhnguyenx | 2025-09-12 | update loging, determine result, modify timer
+10aa41a | vinhnguyenx | 2025-09-12 | create requirement file
+3f62fea | vinhnguyenx | 2025-09-12 | add comment on Visualization code
+736a5b7 | vinhnguyenx | 2025-09-12 | ignore __pycache__
+536b496 | vinhnguyenx | 2025-09-12 | Initialize

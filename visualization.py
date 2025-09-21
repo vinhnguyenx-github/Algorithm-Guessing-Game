@@ -391,7 +391,6 @@ class Visualization:
         self.quick_tasks = None
         self.quick_in_progress = None
 
-
     def draw_bars(self):
         for i in range(len(self.dataLength)):
             x = self.x_offset + self.gap * (i + 1) + self.barWidth * i
