@@ -1,27 +1,23 @@
-# Run with:  SDL_VIDEODRIVER=dummy pytest -q
-import sys, os
+import os, sys
+os.environ["SDL_VIDEODRIVER"] = "dummy"   
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-os.environ.setdefault("SDL_VIDEODRIVER", "dummy") 
 
 import pygame
 import numpy as np
 import pytest
-
 from visualization import Visualization
-
 
 
 # ---------- Helpers ----------
 class Ticker:
-    """Deterministic fake clock for pygame.time.get_ticks()."""
+    """fake clock for pygame.time.get_ticks()."""
     def __init__(self, step=1):
         self.t = 0
         self.step = step
     def __call__(self):
         self.t += self.step
         return self.t
-
 
 def make_vis(arr, w=640, h=480):
     pygame.init()
@@ -35,7 +31,6 @@ def make_vis(arr, w=640, h=480):
         column_width=w,
         name=""
     )
-
 
 def run_to_completion(vis, algo_id, max_steps=20000):
     # eliminate waiting so tests run fast
@@ -55,7 +50,6 @@ def fake_ticks(monkeypatch):
     monkeypatch.setattr(pygame.time, "get_ticks", tick)
     return tick
 
-
 # ---------- Correctness across all algorithms ----------
 @pytest.mark.parametrize("algo_id", [1, 2, 3, 4, 5])  # bubble, insertion, quick, merge, selection
 @pytest.mark.parametrize("arr", [
@@ -72,7 +66,7 @@ def test_algorithms_sort_correctly(algo_id, arr):
         assert set(vis.states.tolist()) == {2}
 
 
-# ----- Test each Alg -----
+# ---------- Test each algo ----------
 def test_quicksort_internal_state_drains():
     vis = make_vis([9, 1, 8, 3, 7, 2, 6, 4, 5])
     run_to_completion(vis, 3)  # quick sort
@@ -81,13 +75,11 @@ def test_quicksort_internal_state_drains():
     if hasattr(vis, "quick_in_progress"):
         assert vis.quick_in_progress is None
 
-
 def test_mergesort_jobs_drain():
     vis = make_vis([5, 4, 3, 2, 1])
     run_to_completion(vis, 4)  # merge sort
     if hasattr(vis, "merge_tasks"):
         assert vis.merge_tasks == []
-
 
 def test_selectionsort_indices_stay_in_bounds():
     vis = make_vis([3, 1, 2, 0])
@@ -103,6 +95,7 @@ def test_speedup_changes_delays():
     vis.speedUp()
     assert (vis.delay_compare, vis.delay_swap) == (10, 10)
     assert (vis.delay_compare, vis.delay_swap) != old
+
 
 def test_reset():
     vis = make_vis([4, 1, 3, 2])
