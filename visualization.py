@@ -428,153 +428,159 @@ class Visualization:
     def speedUp(self):
         self.delay_compare = 10
         self.delay_swap = 10
+    
+def _run_game():
+    # ---- main ----
+    pygame.init()
+    font = pygame.font.SysFont(None, 24)
 
-# ---- main ----
-pygame.init()
-font = pygame.font.SysFont(None, 24)
+    base_data = numpy.random.randint(10, HEIGHT - 100, dataPoints)
 
-base_data = numpy.random.randint(10, HEIGHT - 100, dataPoints)
+    left_width = WIDTH // 2
+    right_width = WIDTH - left_width
 
-left_width = WIDTH // 2
-right_width = WIDTH - left_width
+    left_vis = Visualization(dataLength=base_data, x_offset=0, column_width=left_width)
+    right_vis = Visualization(dataLength=base_data, x_offset=left_width, column_width=right_width)
 
-left_vis = Visualization(dataLength=base_data, x_offset=0, column_width=left_width)
-right_vis = Visualization(dataLength=base_data, x_offset=left_width, column_width=right_width)
+    left_rect  = pygame.Rect(0, 0, left_width, HEIGHT - 80)          # exclude bottom padding
+    right_rect = pygame.Rect(left_width, 0, right_width, HEIGHT - 80)
 
-left_rect  = pygame.Rect(0, 0, left_width, HEIGHT - 80)          # exclude bottom padding
-right_rect = pygame.Rect(left_width, 0, right_width, HEIGHT - 80)
+    start_button = Button( 30, HEIGHT - 55, 120, 40, "Start", font)
+    reset_button = Button(180, HEIGHT - 55, 120, 40, "Reset", font)
 
-start_button = Button( 30, HEIGHT - 55, 120, 40, "Start", font)
-reset_button = Button(180, HEIGHT - 55, 120, 40, "Reset", font)
+    left_algo, right_algo = random.sample(algorithms, 2)
 
-left_algo, right_algo = random.sample(algorithms, 2)
+    start_visualize =False
+    hover_side = None
 
-start_visualize =False
-hover_side = None
+    while running:
+        # ---------------- EVENTS ----------------
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
-while running:
-    # ---------------- EVENTS ----------------
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+            # Start round
+            if start_button.is_clicked(event):
+                start_visualize = True
+                start_time = pygame.time.get_ticks()
+                elapsed_ms = 0
+                timer_running = True
+                reaction_logged = False
+                prediction = None
+                result_text = ""
+                result_printed = False
+                pending_time_s = None
+                left_algo, right_algo = random.sample(algorithms, 2)
 
-        # Start round
-        if start_button.is_clicked(event):
-            start_visualize = True
-            start_time = pygame.time.get_ticks()
-            elapsed_ms = 0
-            timer_running = True
-            reaction_logged = False
-            prediction = None
-            result_text = ""
-            result_printed = False
-            pending_time_s = None
-            left_algo, right_algo = random.sample(algorithms, 2)
+            # Reset round 
+            if reset_button.is_clicked(event):
+                base_data = numpy.random.randint(10, HEIGHT - 100, dataPoints)
+                left_vis.reset(base_data)
+                right_vis.reset(base_data)
+                start_visualize = False
+                start_time = None
+                elapsed_ms = 0
+                timer_running = False
+                reaction_logged = False
+                prediction = None
+                result_text = ""
+                result_printed = False
+                pending_time_s = None
+                hover_side = None
 
-        # Reset round 
-        if reset_button.is_clicked(event):
-            base_data = numpy.random.randint(10, HEIGHT - 100, dataPoints)
-            left_vis.reset(base_data)
-            right_vis.reset(base_data)
-            start_visualize = False
-            start_time = None
-            elapsed_ms = 0
-            timer_running = False
-            reaction_logged = False
-            prediction = None
-            result_text = ""
-            result_printed = False
-            pending_time_s = None
-            hover_side = None
+            # First click inside a column → choose, speed up, capture time, freeze timer
+            if start_visualize and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if left_rect.collidepoint(event.pos) or right_rect.collidepoint(event.pos):
+                    if prediction is None:
+                        prediction = 'left' if left_rect.collidepoint(event.pos) else 'right'
+                    # speed up both
+                    left_vis.speedUp()
+                    right_vis.speedUp()
+                    
+                    # capture reaction time once; freeze timer
+                    if timer_running and not reaction_logged and start_time is not None:
+                        pending_time_s = (pygame.time.get_ticks() - start_time) / 1000.0
+                        reaction_logged = True
+                        timer_running = False
 
-        # First click inside a column → choose, speed up, capture time, freeze timer
-        if start_visualize and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if left_rect.collidepoint(event.pos) or right_rect.collidepoint(event.pos):
-                if prediction is None:
-                    prediction = 'left' if left_rect.collidepoint(event.pos) else 'right'
-                # speed up both
-                left_vis.speedUp()
-                right_vis.speedUp()
-                
-                # capture reaction time once; freeze timer
-                if timer_running and not reaction_logged and start_time is not None:
-                    pending_time_s = (pygame.time.get_ticks() - start_time) / 1000.0
-                    reaction_logged = True
-                    timer_running = False
+        # ---------------- CLEAR ----------------
+        win.fill(BLACK)
+        pygame.draw.line(win, WHITE, (left_width, 0), (left_width, HEIGHT - 80), 2)
+        pygame.draw.line(win, WHITE, (0, HEIGHT - 70), (WIDTH, HEIGHT - 70), 5)
 
-    # ---------------- CLEAR ----------------
-    win.fill(BLACK)
-    pygame.draw.line(win, WHITE, (left_width, 0), (left_width, HEIGHT - 80), 2)
-    pygame.draw.line(win, WHITE, (0, HEIGHT - 70), (WIDTH, HEIGHT - 70), 5)
+        # ---------------- UPDATE / DRAW ----------------
+        if start_visualize and start_time is not None:
+            if timer_running:
+                elapsed_ms = pygame.time.get_ticks() - start_time
 
-    # ---------------- UPDATE / DRAW ----------------
-    if start_visualize and start_time is not None:
-        if timer_running:
-            elapsed_ms = pygame.time.get_ticks() - start_time
+            left_vis.render_step(left_algo)
+            right_vis.render_step(right_algo)
 
-        left_vis.render_step(left_algo)
-        right_vis.render_step(right_algo)
+            # decide winner and set on-screen result + append CSV row once
+            if prediction is not None and not result_printed:
+                lf = getattr(left_vis, "finished_at", None)
+                rf = getattr(right_vis, "finished_at", None)
+                winner = None
+                if lf is not None and rf is not None:
+                    winner = 'left' if lf < rf else ('right' if rf < lf else 'tie')
+                elif lf is not None:
+                    winner = 'left'
+                elif rf is not None:
+                    winner = 'right'
 
-        # decide winner and set on-screen result + append CSV row once
-        if prediction is not None and not result_printed:
-            lf = getattr(left_vis, "finished_at", None)
-            rf = getattr(right_vis, "finished_at", None)
-            winner = None
-            if lf is not None and rf is not None:
-                winner = 'left' if lf < rf else ('right' if rf < lf else 'tie')
-            elif lf is not None:
-                winner = 'left'
-            elif rf is not None:
-                winner = 'right'
-
-            if winner is not None:
-                if winner == 'tie':
-                    result_text = "Result: Tie"
-                else:
-                    result_text = "Correct!" if prediction == winner else f"Incorrect — {winner} finished first"
-                # append CSV row: id,time,result  (pending_time_s is reaction time at click)
-                if pending_time_s is not None:
-                    with open(SESSION_FILE, "a", newline="", encoding="utf-8") as f:
-                        writer = csv.writer(f)
-                        writer.writerow([attempt_line_id, f"{pending_time_s:.3f}", "Correct" if result_text.startswith("Correct") else ("Tie" if winner == "tie" else "Incorrect")])
-                    attempt_line_id += 1
-                    pending_time_s = None
-                result_printed = True
-    else:
-        # keep columns black until Start
-        pass
-
-    # ---------------- HOVER (only when running) ----------------
-    if start_visualize:
-        mx, my = pygame.mouse.get_pos()
-        if left_rect.collidepoint((mx, my)):
-            hover_side = 'left'
-        elif right_rect.collidepoint((mx, my)):
-            hover_side = 'right'
+                if winner is not None:
+                    if winner == 'tie':
+                        result_text = "Result: Tie"
+                    else:
+                        result_text = "Correct!" if prediction == winner else f"Incorrect — {winner} finished first"
+                    # append CSV row: id,time,result  (pending_time_s is reaction time at click)
+                    if pending_time_s is not None:
+                        with open(SESSION_FILE, "a", newline="", encoding="utf-8") as f:
+                            writer = csv.writer(f)
+                            writer.writerow([attempt_line_id, f"{pending_time_s:.3f}", "Correct" if result_text.startswith("Correct") else ("Tie" if winner == "tie" else "Incorrect")])
+                        attempt_line_id += 1
+                        pending_time_s = None
+                    result_printed = True
         else:
-            hover_side = None
+            # keep columns black until Start
+            pass
 
-        if hover_side == 'left':
-            overlay = pygame.Surface((left_rect.width, left_rect.height), pygame.SRCALPHA)
-            overlay.fill(WHITE_TRANS)
-            win.blit(overlay, left_rect.topleft)
-        elif hover_side == 'right':
-            overlay = pygame.Surface((right_rect.width, right_rect.height), pygame.SRCALPHA)
-            overlay.fill(WHITE_TRANS)
-            win.blit(overlay, right_rect.topleft)
+        # ---------------- HOVER (only when running) ----------------
+        if start_visualize:
+            mx, my = pygame.mouse.get_pos()
+            if left_rect.collidepoint((mx, my)):
+                hover_side = 'left'
+            elif right_rect.collidepoint((mx, my)):
+                hover_side = 'right'
+            else:
+                hover_side = None
 
-    # ---------------- UI ----------------
-    left_vis.render_title(font)
-    right_vis.render_title(font)
-    start_button.draw_start(win)
-    reset_button.draw_start(win)
+            if hover_side == 'left':
+                overlay = pygame.Surface((left_rect.width, left_rect.height), pygame.SRCALPHA)
+                overlay.fill(WHITE_TRANS)
+                win.blit(overlay, left_rect.topleft)
+            elif hover_side == 'right':
+                overlay = pygame.Surface((right_rect.width, right_rect.height), pygame.SRCALPHA)
+                overlay.fill(WHITE_TRANS)
+                win.blit(overlay, right_rect.topleft)
 
-    timer_text = font.render(f"{format_time(elapsed_ms)} (s)", True, WHITE)
-    win.blit(timer_text, (WIDTH - 160, HEIGHT - 40))
+        # ---------------- UI ----------------
+        left_vis.render_title(font)
+        right_vis.render_title(font)
+        start_button.draw_start(win)
+        reset_button.draw_start(win)
 
-    if result_text:
-        result_render = font.render(result_text, True, WHITE)
-        win.blit(result_render, (WIDTH // 2 - result_render.get_width() // 2, HEIGHT - 40))
+        timer_text = font.render(f"{format_time(elapsed_ms)} (s)", True, WHITE)
+        win.blit(timer_text, (WIDTH - 160, HEIGHT - 40))
 
-    pygame.display.update()
-    clock.tick(FPS)
+        if result_text:
+            result_render = font.render(result_text, True, WHITE)
+            win.blit(result_render, (WIDTH // 2 - result_render.get_width() // 2, HEIGHT - 40))
+
+        pygame.display.update()
+        clock.tick(FPS)
+    
+    pygame.quit()
+
+if __name__ == "__main__":
+    _run_game()
