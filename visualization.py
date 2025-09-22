@@ -35,7 +35,6 @@ class Visualization:
         self.screen = screen
         self.screen_width = screen_width
         self.screen_height = screen_height
-        self.clock = clock
 
         self.x_offset = x_offset
         self.column_width = column_width if column_width is not None else screen_width
@@ -65,12 +64,13 @@ class Visualization:
         self.isSwapped = False       # bubble early-exit flag (reset each pass)
         self.ins_inited = False      # insertion one-time init
         self.merge_inited = False    # merge one-time init
+        self.merge_tasks = []
+        self.merge_buffer = None
         self.finished_at = None      # pygame ticks when finished
         self.sel_inited = False      # selection one-time init
         self.sel_min_idx = 0         # min flag 
         self.quick_tasks = None
         self.quick_in_progress = None
-
 
     # --- Bubble Sort  ---
     def bubbleSort(self):
@@ -169,7 +169,7 @@ class Visualization:
             return
 
         # one-time setup: use a simple stack of (low, high) tasks
-        if not hasattr(self, "quick_tasks") or self.quick_tasks is None:
+        if self.quick_tasks is None:
             self.quick_tasks = [(0, self.n - 1)]
             self.quick_in_progress = None
 
@@ -256,11 +256,6 @@ class Visualization:
 
         # one-time setup (first frame)
         if not self.merge_inited:
-            if not hasattr(self, "merge_tasks"):
-                self.merge_tasks = []
-            if not hasattr(self, "merge_buffer"):
-                self.merge_buffer = None
-
             # generate all merge jobs for progressively larger block sizes (bottom-up)
             size = 1
             while size < self.n:
@@ -432,7 +427,21 @@ class Visualization:
 def _run_game():
     # ---- main ----
     pygame.init()
+    win = pygame.display.set_mode((WIDTH, HEIGHT))
+    clock = pygame.time.Clock()
     font = pygame.font.SysFont(None, 24)
+
+    running = True                 # <-- add this
+    start_visualize = False
+    start_time = None
+    elapsed_ms = 0
+    timer_running = False
+    reaction_logged = False
+    prediction = None
+    result_text = ""
+    result_printed = False
+    pending_time_s = None
+    attempt_line_id = 1  
 
     base_data = numpy.random.randint(10, HEIGHT - 100, dataPoints)
 
@@ -518,8 +527,8 @@ def _run_game():
 
             # decide winner and set on-screen result + append CSV row once
             if prediction is not None and not result_printed:
-                lf = getattr(left_vis, "finished_at", None)
-                rf = getattr(right_vis, "finished_at", None)
+                lf = left_vis.finished_at
+                rf = right_vis.finished_at
                 winner = None
                 if lf is not None and rf is not None:
                     winner = 'left' if lf < rf else ('right' if rf < lf else 'tie')
