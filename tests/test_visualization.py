@@ -8,7 +8,6 @@ import numpy as np
 import pytest
 from visualization import Visualization
 
-
 # ---------- Helpers ----------
 class Ticker:
     """fake clock for pygame.time.get_ticks()."""
@@ -70,16 +69,13 @@ def test_algorithms_sort_correctly(algo_id, arr):
 def test_quicksort_internal_state_drains():
     vis = make_vis([9, 1, 8, 3, 7, 2, 6, 4, 5])
     run_to_completion(vis, 3)  # quick sort
-    if hasattr(vis, "quick_tasks"):
-        assert vis.quick_tasks is None or vis.quick_tasks == []
-    if hasattr(vis, "quick_in_progress"):
-        assert vis.quick_in_progress is None
+    assert vis.quick_tasks is None or vis.quick_tasks == []
+    assert vis.quick_in_progress is None
 
 def test_mergesort_jobs_drain():
     vis = make_vis([5, 4, 3, 2, 1])
     run_to_completion(vis, 4)  # merge sort
-    if hasattr(vis, "merge_tasks"):
-        assert vis.merge_tasks == []
+    assert vis.merge_tasks == []
 
 def test_selectionsort_indices_stay_in_bounds():
     vis = make_vis([3, 1, 2, 0])
@@ -107,7 +103,7 @@ def test_reset():
     # common flags reinitialized
     assert vis.i == 0 and vis.j == 0
     assert vis.sorted_tail == vis.n
-    assert getattr(vis, "quick_tasks") is None
-    assert getattr(vis, "quick_in_progress") is None
+    assert vis.quick_tasks is None
+    assert vis.quick_in_progress is None
     assert vis.merge_inited is False
     assert vis.sel_inited is False
